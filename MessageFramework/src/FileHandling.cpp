@@ -7,8 +7,6 @@
 #include <chrono>
 #include <thread>
 
-#include "ClasslessLogger.hpp"
-#include "LogSpace.hpp"
 #include "FileHandling.hpp"
 
 namespace
@@ -21,14 +19,12 @@ enum class FileMode
 
 bool createGuardian(const std::string& pathToFolder)
 {
-    fileLog(("FileInterface::createGuardian " + pathToFolder).c_str(), LogSpace::FileHandling);
     FileInterface::Managment::createFile(pathToFolder + "/GUARD");
     return FileInterface::Managment::isFileExist(pathToFolder + "/GUARD");
 }
 
 bool removeGuardian(const std::string& pathToFolder)
 {
-    fileLog(("FileInterface::createGuardian " + pathToFolder).c_str(), LogSpace::FileHandling);
     remove((pathToFolder + "/GUARD").c_str());
     return ! FileInterface::Managment::isFileExist(pathToFolder + "/GUARD");
 }
@@ -41,7 +37,6 @@ bool isGuardianExist(const std::string& pathToFolder)
 void waitForAccess(const std::string& folderName)
 {
     bool accesToFile = false;
-    fileLog(("FileInterface::waitForAccess START in FileMode = " + folderName).c_str(), LogSpace::FileHandling);
     while(!accesToFile)
     {
         if (!isGuardianExist(folderName))
@@ -51,16 +46,13 @@ void waitForAccess(const std::string& folderName)
         }
         std::this_thread::sleep_for(std::chrono::microseconds(100));
     }
-    fileLog(("FileInterface::waitForAccess END in FileMode = " + folderName).c_str(), LogSpace::FileHandling);
 }
 
 std::unique_ptr<std::fstream> openFile(const std::string& pathToFile, FileMode mode, AccesMode accesMode = AccesMode::withGuardian)
 {
-    fileLog(("FileInterface::openFile started in FileMode = " + std::to_string(static_cast<int>(mode))).c_str(), LogSpace::FileHandling);
     if (!FileInterface::Managment::isFileExist(pathToFile))
     {
         std::string logInfo = "FileInterface::openFile ERROR: " + pathToFile + " does not exist";
-        fileLog(logInfo.c_str(), LogSpace::FileHandling);
         return nullptr;
     }
 
@@ -88,7 +80,6 @@ std::unique_ptr<std::fstream> openFile(const std::string& pathToFile, FileMode m
     }
     else
     {
-        fileLog("FileInterface::openFile ERROR: is_open() failed", LogSpace::FileHandling);
         return nullptr;
     }
 }
@@ -106,7 +97,6 @@ std::unique_ptr<std::fstream> openFileToRead(const std::string& pathToFile, Acce
 
 bool FileInterface::Modification::addRow(const std::string& pathToFile, const std::string& text)
 {
-    fileLog(("FileInterface::Modification::addRow Add row to " + pathToFile).c_str(), LogSpace::FileHandling);
     std::string folderName = *Accesor::getFolderName(pathToFile);
     if (std::unique_ptr<std::fstream> file = openFileToWrite(pathToFile))
     {
@@ -117,7 +107,6 @@ bool FileInterface::Modification::addRow(const std::string& pathToFile, const st
     }
     else
     {
-        fileLog("FileInterface::Modification::addRow ERROR: Cannot get file acces", LogSpace::FileHandling);
         removeGuardian(folderName);
         return false;
     }
@@ -129,11 +118,9 @@ bool FileInterface::Managment::createFile(const std::string& pathToFile)
     if (isFileExist(pathToFile))
     {
         std::string logInfo = "FileInterface::Managment::createFile() started ERROR: " + pathToFile + "File exist!";
-        fileLog(logInfo.c_str(), LogSpace::FileHandling);
         return false;
     }
     std::string logInfo = "FileInterface::Managment::createFile() -> " + pathToFile;
-    fileLog(logInfo.c_str(), LogSpace::FileHandling);
 
     std::string systemCommand = "touch " + pathToFile;
     system("umask 777");
@@ -142,7 +129,6 @@ bool FileInterface::Managment::createFile(const std::string& pathToFile)
     if (!isFileExist(pathToFile))
     {
         std::string logInfo = "FileInterface::Managment::createFile started ERROR: " + pathToFile + "was not create";
-        fileLog(logInfo.c_str(), LogSpace::FileHandling);
         return false;
     }
 
@@ -152,7 +138,6 @@ bool FileInterface::Managment::createFile(const std::string& pathToFile)
 std::unique_ptr<std::vector<std::string>> FileInterface::Accesor::getFileContent(const std::string& pathToFile, AccesMode accesMode = AccesMode::withGuardian)
 {
     std::string logInfo = "FileInterface::Accesor::getFileContent() " + pathToFile;
-    fileLog(logInfo.c_str(), LogSpace::FileHandling);
     std::unique_ptr<std::vector<std::string>> fileContent = std::make_unique<std::vector<std::string>>();
     std::string folderName = *Accesor::getFolderName(pathToFile);
 
@@ -168,7 +153,6 @@ std::unique_ptr<std::vector<std::string>> FileInterface::Accesor::getFileContent
     else
     {
         std::string logInfo = "FileInterface::Accesor::getFileContent ERROR: Cannot get acces to "  + pathToFile;
-        fileLog(logInfo.c_str(), LogSpace::FileHandling);
         if (AccesMode::withGuardian == accesMode)
         {
             removeGuardian(folderName);
@@ -230,7 +214,6 @@ std::unique_ptr<std::string> FileInterface::Accesor::getFolderName(const std::st
 
 std::unique_ptr<std::string> FileInterface::Accesor::getRowField(const std::string& field, const int fieldNumber)
 {
-    fileLog("FileInterface::Accesor::getRowField() started from ", LogSpace::FileHandling);
     int actualFieldNumber = -1;
     std::unique_ptr<std::string> fieldToDownload = std::make_unique<std::string>();
 
@@ -275,7 +258,6 @@ bool FileInterface::Managment::isFileExist(const std::string& pathToFile)
 bool FileInterface::Managment::removeFile(const std::string& pathToFile)
 {
     std::string logInfo = "FileInterface::Managment::removeFile() -> " + pathToFile;
-    fileLog(logInfo.c_str(), LogSpace::FileHandling);
     remove(pathToFile.c_str());
     return ! isFileExist(pathToFile);
 }
@@ -283,12 +265,10 @@ bool FileInterface::Managment::removeFile(const std::string& pathToFile)
 bool FileInterface::Modification::removeRow(const std::string& pathToFile, const std::string& pattern)
 {
     std::string logInfo = "FileInterface::Modification::removeRow() -> " + pathToFile;
-    fileLog(logInfo.c_str(), LogSpace::FileHandling);
 
     if (nullptr == Accesor::getRow(pathToFile, pattern))
     {
         const std::string logInfo = "FileInterface::Modification::removeRow() -> Attempt to remove unexist row!";
-        fileLog(logInfo.c_str(), LogSpace::FileHandling);
         return false;
     }
 

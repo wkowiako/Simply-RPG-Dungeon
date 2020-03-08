@@ -74,8 +74,8 @@ target_link_libraries(ut_RPG ${GTEST_MAIN_LIBRARY}
 ##### 3.googletest                                                         #####
 ##### 4.messenger_binary_UT                                                #####
 ################################################################################
-add_dependencies(messenger_binary_UT messenger_binary)
-add_dependencies(googletest messenger_binary)
+add_dependencies(ut_RPG bin_RPG)
+add_dependencies(googletest bin_RPG)
 
 ################################################################################
 #####                              VALGRIND                                #####
